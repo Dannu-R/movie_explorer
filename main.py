@@ -1,43 +1,23 @@
 from fastapi import FastAPI
-from fastapi import HTTPException
+from pydantic import BaseModel
 
 
 app = FastAPI()
 
 # In-memory item list
-tasks = []
+users = []
 
-# POST route to add an item (via query param)
-@app.get("/tasks")
-def get_tasks():
-    return {"tasks": tasks}
 
-@app.post("/tasks")
-def add_task(task: str):
-    tasks.append(task)
-    return f"Task {task} added"
+class User(BaseModel):
+  username: str
+  email: str
+  password: str
 
-@app.get("/task/{task_id}")
-def get_task(task_id: int):
-    if task_id < 0 or task_id >= len(tasks):
-       
-       raise HTTPException(status_code=404, detail="Task not found: Client Issue")
-    task = tasks[task_id]
-    return {"task": task}
-   
+@app.post("/register")
+def register_user(user: User):
+  users.append(user)
+  return "Successfully added user to database"
 
-@app.put("/tasks/{task_id}")
-def update_task(task_id: int, new_task: str):
-    if task_id < 0 or task_id >= len(tasks):
-       raise HTTPException(status_code=404, detail="Task not found: Client Issue")
-    
-    tasks[task_id] = new_task
-    return f"New task list: {tasks}"
-
-@app.delete("/tasks/{task_id}")
-def delete_task(task_id: int):
-    if task_id < 0 or task_id >= len(tasks):
-       
-       raise HTTPException(status_code=404, detail="Task not found: Client Issue")
-    tasks.remove(tasks[task_id])
-    return f"task has been deletd"
+@app.get("/users")
+def get_users():
+  return users
