@@ -13,6 +13,10 @@ class User(BaseModel):
   email: str
   password: str
 
+class PublicUser(BaseModel):
+  username: str
+  email: str
+
 @app.post("/register")
 def register_user(user: User):
   users.append(user)
@@ -20,4 +24,4 @@ def register_user(user: User):
 
 @app.get("/users")
 def get_users():
-  return users
+  return [PublicUser(**user.dict()) for user in users]
