@@ -1,27 +1,18 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+# from fastapi import FastAPI
+# from pydantic import BaseModel
+# from fastapi import HTTPException
+# from fastapi.responses import JSONResponse
+import pandas as pd
+import os
 
-
-app = FastAPI()
+# app = FastAPI()
 
 # In-memory item list
 users = []
 
+current_dir = os.getcwd()
+file_path = f"{current_dir}/imdb-movies-dataset.csv"
+print(file_path)
 
-class User(BaseModel):
-  username: str
-  email: str
-  password: str
-
-class PublicUser(BaseModel):
-  username: str
-  email: str
-
-@app.post("/register")
-def register_user(user: User):
-  users.append(user)
-  return "Successfully added user to database"
-
-@app.get("/users")
-def get_users():
-  return [PublicUser(**user.dict()) for user in users]
+df = pd.read_csv("C:\\Users\\danus\\OneDrive\\VS_code_projects\\movie_explorer\\imdb-movies-dataset.csv", encoding="utf-8")
+print(df.head(1))
