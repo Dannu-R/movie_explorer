@@ -27,11 +27,12 @@ class Movie(BaseModel):
 
   @root_validator(pre=True)
   def replace_nan_with_none(cls, values):
-    # print(f"⚠️{values}")
     for key in values:
-      if isinstance(values[key], float) and math.isnan(values[key]):
+      val = values[key]
+      if isinstance(val, float) and math.isnan(val):
           values[key] = None
     return values
+  
   @validator('Genre')
   def get_genre_list(cls, value):
     if value != None:
@@ -42,6 +43,11 @@ class Movie(BaseModel):
     if value != None:
       return value.split(', ')
 
+  @validator('Rating', always=True, pre=False)
+  def change_rating(cls, value):
+    if value == None:
+      value = 0
+    return value
 
 movies: list[Movie] = []
 
@@ -65,7 +71,10 @@ except Exception as e:
 
 @app.get("/movie/search/{title}")
 def get_movie_by_title(title: str):
-  idx = movie_df.index[movie_df["Title"] == title]  # Index object
+  idx = movie_df.index[
+    (movie_df["Title"] == title) |
+    (title in movie_df["Title"])
+    ]  # Index object
   try:
     idx_value = idx[0]
     return movies[idx_value]
@@ -73,14 +82,14 @@ def get_movie_by_title(title: str):
     raise HTTPException(status_code=404, detail="Movie not found")
 
 @app.get("/movie/top/{genre}", response_model=list[Movie])
-def get_best_movies(genre = str):
+def get_best_movies(genre: str, limit: int):
   genre_movies = []
   genre_df = movie_df[movie_df['Genre'] == genre]
+  global tester
   for n in genre_df.index:
-    if n<3
     genre_movies.append(Movie(**genre_df.loc[n].to_dict()))
-    print(f"{genre_df.loc[n].to_dict()}")
-  return genre_movies[0] 
+  genre_movies = sorted(genre_movies, key=lambda x: x.Rating, reverse=True) 
+  return genre_movies[0: limit] 
 
 @app.get("/movies", response_model=list[Movie])
 def get_movies(
