@@ -5,7 +5,6 @@ import os
 import pandas as pd
 import math
 
-
 app = FastAPI()
 
 class Movie(BaseModel):
@@ -32,6 +31,12 @@ class Movie(BaseModel):
       if isinstance(val, float) and math.isnan(val):
           values[key] = None
     return values
+  
+  @validator('Votes')
+  def catch_votes(cls, value):
+    if "," in str(value):
+      value = int(str(value).replace(",", ""))
+    return value
   
   @validator('Genre')
   def get_genre_list(cls, value):
@@ -60,36 +65,35 @@ class Stats(BaseModel):
   
   
 movies: list[Movie] = []
+movie_df = pd.DataFrame()
 
-try:
-  current_dir = os.getcwd()
-
-  raw_df = pd.read_csv(f"{current_dir}/imdb-movies-dataset.csv", encoding="utf-8")
-  movie_df = raw_df.rename(columns={
-      "Duration (min)": "Duration",
-      "Review Count": "Review_Count",
-      "Review Title": "Review_Title"
-  })
-
-  for n in range(0, len(movie_df)-1):
-    movies.append(Movie(**movie_df.loc[n].to_dict()))
-  print(type(movies[0]))
-except Exception as e:
-  print("🚨 Error while loading movies:", e)
-
-
-
-@app.get("/movie/search/{title}")
-def get_movie_by_title(title: str):
-  idx = movie_df.index[
-    (movie_df["Title"] == title) |
-    (title in movie_df["Title"])
-    ]  # Index object
+@app.on_event("startup")
+async def load_movies():
+  global movies, movie_df
   try:
-    idx_value = idx[0]
-    return movies[idx_value]
-  except:
-    raise HTTPException(status_code=404, detail="Movie not found")
+    current_dir = os.getcwd()
+
+    raw_df = pd.read_csv(f"{current_dir}/imdb-movies-dataset.csv", encoding="utf-8")
+    movie_df = raw_df.rename(columns={
+        "Duration (min)": "Duration",
+        "Review Count": "Review_Count",
+        "Review Title": "Review_Title"
+    })
+
+    for n in range(0, len(movie_df)-1):
+      movies.append(Movie(**movie_df.loc[n].to_dict()))
+  except Exception as e:
+    print("🚨 Error while loading movies:", e)
+
+
+
+@app.get("/movie/search/{title}", response_model=Movie)
+def get_movie_by_title(title: str):
+  global movies
+  for i in range(0, len(movies)):
+    if movies[i].Title == title:
+      return movies[i]
+  raise HTTPException(status_code=404, detail=f"{len(movies)}")
 
 @app.get("/movie/top/{genre}", response_model=list[Movie])
 def get_best_movies(genre: str, limit: int):
@@ -107,12 +111,10 @@ def get_movie_stats(genre: str):
     genre_df = movie_df[movie_df['Genre'] == genre]
   except:
     raise HTTPException(status_code=404, detail="Genre not in database")
-  counter = 0
   genre_movies = [Movie(**genre_df.loc[n].to_dict()) for n in genre_df.index]
   for movie in genre_movies:
     if movie.Rating != None:
       ratings.append(movie.Rating) 
-  print(f"⚠️{ratings}")
   parameters = {"average_ratings": ratings, "movie_count": len(ratings)}
   return Stats(**parameters)
 
@@ -144,10 +146,9 @@ def get_movies(
     filtered_df = filtered_df[filtered_df["Duration"] >= duration]
 
   if genre is not None:
-    if genre is not None:
-      genres = genre.lower().split("-")
-      mask = movie_df["Genre"].str.lower().fillna("").apply(lambda g: any(gen in g for gen in genres))
-      filtered_df = filtered_df[mask]
+    genres = genre.lower().split("-")
+    mask = movie_df["Genre"].str.lower().fillna("").apply(lambda g: any(gen in g for gen in genres))
+    filtered_df = filtered_df[mask]
 
   if rating is not None:
     filtered_df = filtered_df[filtered_df["Rating"] >= rating]
@@ -172,3 +173,24 @@ def get_movies(
   return filtered_movies
     
 
+@app.post("/movies", response_model=Movie)
+def add_movie(
+  Poster: Optional[str] = None,
+  Title: Optional[str] = None,
+  Year: Optional[int] = None,
+  Certificate: Optional[str] = None,
+  Duration: Optional[int] = None,
+  Genre: Optional[str] = None,
+  Rating: Optional[float] = None,
+  Metascore: Optional[int] = None,
+  Director: Optional[str] = None,
+  Cast: Optional[str] = None,
+  Votes: Optional[int] = None,
+  Description: Optional[str] = None,
+  Review_Count: Optional[str] = None,
+  Review_Title: Optional[str] = None,
+  Review: Optional[str] = None
+):
+  movies.append(Movie(**locals()))
+  return movies[-1]
+  
