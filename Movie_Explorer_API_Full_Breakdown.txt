@@ -1,0 +1,66 @@
+🎬 Movie Explorer API - Full Task Breakdown
+
+📦 Phase 1: Setup & Fundamentals
+--------------------------------
+✅ Task 1: Install Tools
+- Set up Python, FastAPI, Uvicorn (server), and Pandas (data tool)
+- Create a virtual environment to isolate your project
+
+✅ Task 2: Hello World FastAPI App
+- Create a basic FastAPI app with a test endpoint like /hello
+- Just to check your app runs and FastAPI is working
+
+📊 Phase 2: Load and Inspect Data
+---------------------------------
+✅ Task 3: Download Dataset
+- Sign up on Kaggle, download a CSV file (like IMDB movies), and save it locally
+
+✅ Task 4: Load CSV with Pandas
+- Use pandas to read the CSV file
+- Print number of rows, columns, and check for missing values
+
+🔌 Phase 3: Basic API Endpoints
+-------------------------------
+✅ Task 5: Serve the Entire Dataset
+- Create a route like /movies that returns the first 10 movies in JSON format
+
+✅ Task 6: Filter by Year
+- Add support for filtering movies by year using query params (e.g., ?year=2015)
+
+✅ Task 7: Search by Title
+- Allow users to search by part of a movie title (e.g., ?title=batman)
+
+🔍 Phase 4: More Sophisticated Queries
+--------------------------------------
+✅ Task 8: Filter by Genre and Rating
+- Combine filters (e.g., ?genre=Action&min_rating=7.5)
+
+✅ Task 9: Add Pagination
+- Return a limited number of results per page (e.g., ?page=1&size=20)
+
+✅ Task 10: Top N Movies
+- Create a route to get top-rated movies by genre and limit (e.g., /top-rated?count=10&genre=Drama)
+
+🧼 Phase 5: Refactor and Polish
+-------------------------------
+✅ Task 11: Load Dataset on App Startup
+- Move CSV loading into a FastAPI startup event so it's loaded once
+
+✅ Task 12: Use Pydantic Models
+- Create schemas to define and validate the structure of API responses
+
+🚀 Phase 6: Stretch Goals
+-------------------------
+✅ Task 13: Add Stats Endpoint
+- Route like /stats that returns average rating and movie count by genre
+
+✅ Task 14: Simulated Review or Movie Add
+- Create a POST route that accepts JSON input and stores it temporarily (in-memory only)
+
+✅ Task 15: Dockerize the App (optional)
+- Learn to containerize your app using Docker (makes it portable and deployable)
+
+🔗 Suggested Datasets
+---------------------
+- IMDb Extensive Dataset: https://www.kaggle.com/datasets/stefanoleone992/imdb-extensive-dataset
+- The Movies Dataset: https://www.kaggle.com/datasets/rounakbanik/the-movies-dataset

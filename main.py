@@ -49,6 +49,16 @@ class Movie(BaseModel):
       value = 0
     return value
 
+
+class Stats(BaseModel):
+  average_ratings: list[float]
+  movie_count: int
+
+  @validator('average_ratings')
+  def get_average(cls, value: list[float]):
+    return round((sum(value) / len(value)), 2)
+  
+  
 movies: list[Movie] = []
 
 try:
@@ -85,11 +95,26 @@ def get_movie_by_title(title: str):
 def get_best_movies(genre: str, limit: int):
   genre_movies = []
   genre_df = movie_df[movie_df['Genre'] == genre]
-  global tester
   for n in genre_df.index:
     genre_movies.append(Movie(**genre_df.loc[n].to_dict()))
   genre_movies = sorted(genre_movies, key=lambda x: x.Rating, reverse=True) 
   return genre_movies[0: limit] 
+
+@app.get("/movie/stats/{genre}", response_model=Stats)
+def get_movie_stats(genre: str):
+  ratings = []
+  try:
+    genre_df = movie_df[movie_df['Genre'] == genre]
+  except:
+    raise HTTPException(status_code=404, detail="Genre not in database")
+  counter = 0
+  genre_movies = [Movie(**genre_df.loc[n].to_dict()) for n in genre_df.index]
+  for movie in genre_movies:
+    if movie.Rating != None:
+      ratings.append(movie.Rating) 
+  print(f"⚠️{ratings}")
+  parameters = {"average_ratings": ratings, "movie_count": len(ratings)}
+  return Stats(**parameters)
 
 @app.get("/movies", response_model=list[Movie])
 def get_movies(
